@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <title>{{title}}</title>
+        
+    <script type="text/javascript">
+        function UpladFile(){
+            var arr = document.getElementById("file").files
+            var url =  "upload"; // 接收上传文件的后台地址
+            for(var i=0;i<arr.length;i++){
+                var file = arr[i]; // js 获取文件对象
+                var form = new FormData(); // FormData 对象
+                form.append("file", file); // 文件对象
+                xhr = new XMLHttpRequest();  // XMLHttpRequest 对象
+                xhr.open("post", url, true); //post方式，url为服务器请求地址，true 该参数规定请求是否异步处理。
+                xhr.send(form); //开始上传，发送form数据
+            }
+        }
+
+    </script>
+    </head>
+    <body>
+        <div>
+            模型名称：<input type="text" id="name" /><br><br>
+            上传数据集：<input type="file" id="file" name="upload" multiple="multiple" onchange="UpladFile()"/>
+        </div>
+    </body>
+</html>

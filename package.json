@@ -1,0 +1,10 @@
+{
+    "dependencies": {
+        "@hapi/boom": "^10.0.1",
+        "@hapi/hapi": "^21.3.2",
+        "@hapi/hoek": "^11.0.2",
+        "@hapi/vision": "^7.0.3",
+        "get-audio-duration": "^4.0.1",
+        "handlebars": "^4.7.8"
+    }
+}
