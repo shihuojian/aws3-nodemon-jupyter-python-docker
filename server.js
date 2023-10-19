@@ -126,8 +126,6 @@ const init = async () => {
         handler: async (request, h)=> {
             try {
                 
-            
-
                 //从bucket获取一张图片，并在60m后过期
                 const getObjectURL = async (Key)=>{
                     const command = new GetObjectCommand({
@@ -181,6 +179,7 @@ const init = async () => {
                 await uploadObject(name,file._data,file.hapi.headers["content-type"]);
                 const res = await getObjectURL(name)
                 return h.response(res);
+
             } catch (error) {
                 throw Boom.badRequest(error)
             }    
