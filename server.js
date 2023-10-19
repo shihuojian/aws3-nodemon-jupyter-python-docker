@@ -11,10 +11,19 @@ const Boom = require('@hapi/boom');
 const Hoek = require('@hapi/hoek');
 const Fs = require('node:fs');
 const Path = require('node:path');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = new S3Client({
+    region:"ap-east-1",
+    credentials:{
+        accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
+        secretAccessKey:"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"
+    }
+})
 const init = async () => {
 
     const server = Hapi.server({
-        port: 7865,
+        port: 8888,
         host: '0.0.0.0'
     });
 
@@ -103,20 +112,29 @@ const init = async () => {
 
     //aws3 实例
     server.route({
-        method: 'POST',
+        method: 'GET',
         path: '/aws3',
-        options:{
-            payload: {
-                output: 'stream',                                           //参考https://hapijs.com/api#-routeoptionspayloadoutput
-                parse:true,
-                multipart: true,
-                maxBytes:1048576 * 50,     //允许上传 50mb
-                timeout:1000 * 60            //上传超时默认60秒
-            },
-        },
+        // options:{
+        //     payload: {
+        //         output: 'stream',                                           //参考https://hapijs.com/api#-routeoptionspayloadoutput
+        //         parse:true,
+        //         multipart: true,
+        //         maxBytes:1048576 * 50,     //允许上传 50mb
+        //         timeout:1000 * 60            //上传超时默认60秒
+        //     },
+        // },
         handler: async (request, h)=> {
-            
-            return h.response('success');
+
+            //从bucket获取一张图片，并在10m后过期
+            const getObjectURL = async (Key)=>{
+                const command = new GetObjectCommand({
+                    Bucket:"shihuojian-private-test",
+                    Key
+                });
+                return await getSignedUrl(s3Client,command,{ expiresIn: 10 });
+            }
+            const res = await getObjectURL('3.png');
+            return h.response(res);
             
         }
     });
