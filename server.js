@@ -12,7 +12,7 @@ const Hoek = require('@hapi/hoek');
 const Fs = require('node:fs');
 const Path = require('node:path');
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const s3Client = new S3Client({
     region:"ap-east-1",
     credentials:{
@@ -133,7 +133,39 @@ const init = async () => {
                 });
                 return await getSignedUrl(s3Client,command,{ expiresIn: 10 });
             }
-            const res = await getObjectURL('3.png');
+            // const res = await getObjectURL('upload/image-1697713779579.jpeg');
+
+            //生成一个临时上传文件url接口，有效期10s,不设置貌似900s后过期
+            const putObject = async (filename,ContentType)=>{
+                const command = new PutObjectCommand({
+                    Bucket:"shihuojian-private-test",
+                    Key:`upload/${filename}`,
+                    ContentType
+                });
+                return await getSignedUrl(s3Client,command,{ expiresIn: 10 });
+            }
+            // const res = await putObject(`image-${Date.now()}.jpeg`,"image/jpeg")
+
+            //列出/目录
+            const listObjects = async ()=>{
+                const command = new ListObjectsV2Command({
+                    Bucket:"shihuojian-private-test",
+                    Key:`/`
+                });
+                return await s3Client.send(command);
+            }
+            // const res = await listObjects();
+
+            //删除文件,有问题删除不了
+            const delObjects = async ()=>{
+                const command = new DeleteObjectCommand({
+                    Bucket:"shihuojian-private-test",
+                    Key:'3.png'
+                });
+                await s3Client.send(command);
+            }
+            const res = await delObjects();
+
             return h.response(res);
             
         }
