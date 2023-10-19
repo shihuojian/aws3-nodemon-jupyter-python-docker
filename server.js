@@ -112,26 +112,26 @@ const init = async () => {
 
     //aws3 实例
     server.route({
-        method: 'GET',
+        method: 'POST',
         path: '/aws3',
-        // options:{
-        //     payload: {
-        //         output: 'stream',                                           //参考https://hapijs.com/api#-routeoptionspayloadoutput
-        //         parse:true,
-        //         multipart: true,
-        //         maxBytes:1048576 * 50,     //允许上传 50mb
-        //         timeout:1000 * 60            //上传超时默认60秒
-        //     },
-        // },
+        options:{
+            payload: {
+                output: 'stream',          //可以设置data,file等                                 //参考https://hapijs.com/api#-routeoptionspayloadoutput
+                parse:true,
+                multipart: true,
+                maxBytes:1048576 * 100,     //允许上传 50mb
+                timeout:1000 * 60            //上传超时默认60秒
+            },
+        },
         handler: async (request, h)=> {
 
-            //从bucket获取一张图片，并在10m后过期
+            //从bucket获取一张图片，并在60m后过期
             const getObjectURL = async (Key)=>{
                 const command = new GetObjectCommand({
                     Bucket:"shihuojian-private-test",
                     Key
                 });
-                return await getSignedUrl(s3Client,command,{ expiresIn: 10 });
+                return await getSignedUrl(s3Client,command,{ expiresIn: 60 });
             }
             // const res = await getObjectURL('upload/image-1697713779579.jpeg');
 
@@ -142,7 +142,7 @@ const init = async () => {
                     Key:`upload/${filename}`,
                     ContentType
                 });
-                return await getSignedUrl(s3Client,command,{ expiresIn: 10 });
+                return await getSignedUrl(s3Client,command,{ expiresIn: 60 });
             }
             // const res = await putObject(`image-${Date.now()}.jpeg`,"image/jpeg")
 
@@ -156,7 +156,7 @@ const init = async () => {
             }
             // const res = await listObjects();
 
-            //删除文件,有问题删除不了
+            //删除文件,有问题因为key暴露给github，被aws检测到了自动增加了防止删除策略。
             const delObjects = async ()=>{
                 const command = new DeleteObjectCommand({
                     Bucket:"shihuojian-private-test",
@@ -164,8 +164,19 @@ const init = async () => {
                 });
                 await s3Client.send(command);
             }
-            const res = await delObjects();
+            // const res = await delObjects();
 
+            //上传文件
+            const uploadObject = async(Key,Body,ContentType)=>{
+                const command = new PutObjectCommand({
+                    Bucket:"shihuojian-private-test",Key,Body,ContentType
+                });
+                return await s3Client.send(command)
+            }
+            const file = request.payload.file;
+            const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题
+            await uploadObject(name,file._data,file.hapi.headers["content-type"]);
+            const res = await getObjectURL(name)
             return h.response(res);
             
         }
