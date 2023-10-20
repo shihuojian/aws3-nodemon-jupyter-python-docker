@@ -12,6 +12,7 @@ const Hoek = require('@hapi/hoek');
 const Fs = require('node:fs');
 const Path = require('node:path');
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const Request = require('request');
 const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const s3Client = new S3Client({
     region:"ap-east-1",
@@ -24,7 +25,7 @@ const init = async () => {
 
     const server = Hapi.server({
         port: 8888,
-        host: '0.0.0.0'
+        host: '0.0.0.0'  //服务器运行填写私有地址
     });
 
     await server.register(require('@hapi/vision'));
@@ -177,8 +178,9 @@ const init = async () => {
                 const file = request.payload.file;
                 const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题,
                 await uploadObject(name,file._data,file.hapi.headers["content-type"]);
-                const res = await getObjectURL(name)
-                return h.response(res);
+                const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出
+                const base64 = Buffer.from(url).toString('base64');
+                return h.response(base64);
 
             } catch (error) {
                 throw Boom.badRequest(error)
@@ -186,6 +188,27 @@ const init = async () => {
             
         }
     });
+
+    //直接输出stream，可以国内限制以及破解防盗链等
+    server.route({
+        method: 'GET',
+        path: '/url/{url}',
+        handler: async (request, h)=> {
+            try{
+                const url = request.params.url;
+                if(url){
+                    Request.get(Buffer.from(url, 'base64').toString('ascii').replace(/&amp;/g,"&")).pipe(request.raw.res);
+                    return h.abandon
+                }else{
+                    return h.close
+                }
+            } catch (error) {
+                throw Boom.badRequest(error)
+            }    
+        }
+    });
+
+
 
     await server.start();
     console.log('Server running on %s', server.info.uri);

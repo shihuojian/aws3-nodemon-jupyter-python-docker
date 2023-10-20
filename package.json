@@ -7,6 +7,7 @@
         "@hapi/hoek": "^11.0.2",
         "@hapi/vision": "^7.0.3",
         "get-audio-duration": "^4.0.1",
-        "handlebars": "^4.7.8"
+        "handlebars": "^4.7.8",
+        "request": "^2.88.2"
     }
 }
