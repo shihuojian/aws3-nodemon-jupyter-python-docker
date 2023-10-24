@@ -102,10 +102,23 @@ const init = async () => {
                 await Fs.promises.mkdir(absPath, {recursive: true});
                 }
             };
-            const filePath = "/upload"
+
+            //同步写入文件流
+            const asynWriteFile = async (readStream,filePath)=>{
+                return new Promise(resolve=>{
+                    const stream = Fs.createWriteStream(filePath);
+                    readStream.pipe(stream);
+                    stream.on('close', function (err) {
+                        resolve()
+                    });
+                })
+            }
+
+            let filePath = "/upload"
             await exitsFolder(filePath);
-            const filePathName = Path.join(process.cwd(),`${filePath}/${name}`)
-            await file.pipe(Fs.createWriteStream(filePathName));
+            filePath = Path.join(process.cwd(),`${filePath}/${name}`);
+            // await file.pipe(Fs.createWriteStream(filePathName)); //异步写入文件
+            await asynWriteFile(file,filePath)
             return h.response('success');
             
         }
