@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 45,
+            "activePatchIndex": 47,
             "patches": [
                 {
                     "date": 1698116593430,
@@ -188,6 +188,14 @@
                 {
                     "date": 1698391797165,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -48,9 +48,9 @@\n                 console.log(i,'-=--')\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 const save = async ()=>{\n-                    await Hoek.wait(1000 * 60); \n+                    await Hoek.wait(1000 * 60 * 10); \n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
+                },
+                {
+                    "date": 1698392539465,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -53,9 +53,9 @@\n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n-                save();\n+                await save();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n                 throw Boom.badRequest(error)\n"
+                },
+                {
+                    "date": 1698393166532,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,11 +19,9 @@\n     credentials:{\n         accessKeyId:\"AKIAQ5QAJCD2C3HB2TXB\",\n         secretAccessKey:\"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\"\n     }\n-});\n-const Run = 'Running.txt'\n-const serverStatus = ()=>{ Fs.unlinkSync(Run);}\n+})\n const init = async () => {\n \n     const server = Hapi.server({\n         port: 8888,\n@@ -40,27 +38,10 @@\n     server.route({\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n-            try{\n-                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n-                i++\n-                console.log(i,'-=--')\n-                Fs.writeFileSync(Run, String(i)); \n-                console.log(request.query.id);\n-                const save = async ()=>{\n-                    await Hoek.wait(1000 * 60 * 10); \n-                    console.log(\"执行成功！\")\n-                    serverStatus();\n-                }\n-\n-                await save();\n-                const context = {title: 'RVc'};\n-                return h.view('index', context);\n-            }catch(error){\n-                throw Boom.badRequest(error)\n-            }\n+            const context = {title: 'RVc'};\n+            return h.view('index', context);\n         }\n     });\n \n     //node 执行shell并传递参数给python实例\n@@ -239,14 +220,16 @@\n             }    \n         }\n     });\n \n+\n+\n     await server.start();\n     console.log('Server running on %s', server.info.uri);\n };\n \n process.on('unhandledRejection', (err) => {\n     console.log(err);\n-    // process.exit(1);\n+    process.exit(1);\n });\n \n init();\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1698116593430,

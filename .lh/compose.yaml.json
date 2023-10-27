@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1698391724213,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1698393173641,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,11 +4,11 @@\n     build: .\n     ports:\n       - \"8888:8888\"\n     volumes:\n-      # - .:/app\n+      - .:/app\n       - /app/node_modules\n-      # - ./opt:/app/opt\n+      - ./opt:/app/opt\n     deploy:\n       resources:\n         reservations:\n           devices:\n"
                 }
             ],
             "date": 1698391724213,

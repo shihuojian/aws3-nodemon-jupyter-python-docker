@@ -20,9 +20,7 @@ const s3Client = new S3Client({
         accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
         secretAccessKey:"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"
     }
-});
-const Run = 'Running.txt'
-const serverStatus = ()=>{ Fs.unlinkSync(Run);}
+})
 const init = async () => {
 
     const server = Hapi.server({
@@ -41,25 +39,8 @@ const init = async () => {
         method: 'GET',
         path: '/',
         handler: async (request, h)=> {
-            try{
-                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}
-                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));
-                i++
-                console.log(i,'-=--')
-                Fs.writeFileSync(Run, String(i)); 
-                console.log(request.query.id);
-                const save = async ()=>{
-                    await Hoek.wait(1000 * 60 * 10); 
-                    console.log("执行成功！")
-                    serverStatus();
-                }
-
-                save();
-                const context = {title: 'RVc'};
-                return h.view('index', context);
-            }catch(error){
-                throw Boom.badRequest(error)
-            }
+            const context = {title: 'RVc'};
+            return h.view('index', context);
         }
     });
 
@@ -240,13 +221,15 @@ const init = async () => {
         }
     });
 
+
+
     await server.start();
     console.log('Server running on %s', server.info.uri);
 };
 
 process.on('unhandledRejection', (err) => {
     console.log(err);
-    // process.exit(1);
+    process.exit(1);
 });
 
 init();
