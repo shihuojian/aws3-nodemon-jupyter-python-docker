@@ -1,0 +1,18 @@
+{
+    "sourceFile": "compose.yaml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1698391724213,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1698391724213,
+            "name": "Commit-0",
+            "content": "\nservices:\n  web:\n    build: .\n    ports:\n      - \"8888:8888\"\n    volumes:\n      # - .:/app\n      - /app/node_modules\n      # - ./opt:/app/opt\n    deploy:\n      resources:\n        reservations:\n          devices:\n            - driver: nvidia\n              count: 1\n              capabilities: [gpu]    "
+        }
+    ]
+}

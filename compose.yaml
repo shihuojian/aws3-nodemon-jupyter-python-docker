@@ -5,9 +5,9 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - .:/app
+      # - .:/app
       - /app/node_modules
-      - ./opt:/app/opt
+      # - ./opt:/app/opt
     deploy:
       resources:
         reservations:

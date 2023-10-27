@@ -1,0 +1,26 @@
+{
+    "sourceFile": "Dockerfile",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1698374515872,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1698391705592,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,18 +1,20 @@\n # syntax=docker/dockerfile:1\n \n-FROM nikolaik/python-nodejs:python3.10-nodejs18\n+# FROM nikolaik/python-nodejs:python3.10-nodejs18\n+FROM node:18-alpine\n \n WORKDIR /app\n \n COPY . .\n \n EXPOSE 8888\n \n #安装依赖\n-RUN pip3 install -r requirements.txt\n-RUN npm install && npm install -g nodemon\n+# RUN pip3 install -r requirements.txt\n+RUN npm install \n+# RUN npm install -g nodemon\n \n VOLUME [\"/app/opt\" ]\n \n-CMD [ \"nodemon\", \"-L\", \"server.js\" ]\n+# CMD [ \"nodemon\", \"-L\", \"server.js\" ]\n # CMD [\"jupyter\", \"lab\", \"--ip=0.0.0.0\",\"--port=8888\", \"--allow-root\", \"--no-browser\"]\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1698391734785,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -13,8 +13,9 @@\n # RUN pip3 install -r requirements.txt\n RUN npm install \n # RUN npm install -g nodemon\n \n-VOLUME [\"/app/opt\" ]\n+# VOLUME [\"/app/opt\" ]\n \n+CMD [ \"node\", \"server.js\" ]\n # CMD [ \"nodemon\", \"-L\", \"server.js\" ]\n # CMD [\"jupyter\", \"lab\", \"--ip=0.0.0.0\",\"--port=8888\", \"--allow-root\", \"--no-browser\"]\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1698374515872,
+            "name": "Commit-0",
+            "content": "# syntax=docker/dockerfile:1\n\nFROM nikolaik/python-nodejs:python3.10-nodejs18\n\nWORKDIR /app\n\nCOPY . .\n\nEXPOSE 8888\n\n#安装依赖\nRUN pip3 install -r requirements.txt\nRUN npm install && npm install -g nodemon\n\nVOLUME [\"/app/opt\" ]\n\nCMD [ \"nodemon\", \"-L\", \"server.js\" ]\n# CMD [\"jupyter\", \"lab\", \"--ip=0.0.0.0\",\"--port=8888\", \"--allow-root\", \"--no-browser\"]"
+        }
+    ]
+}

@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 45,
             "patches": [
                 {
                     "date": 1698116593430,
@@ -16,6 +16,178 @@
                 {
                     "date": 1698119448243,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -101,12 +101,25 @@\n                 } catch (e) {\n                 await Fs.promises.mkdir(absPath, {recursive: true});\n                 }\n             };\n-            const filePath = \"/upload\"\n+\n+            //同步写入文件流\n+            const asynWriteFile = async (readStream,filePath)=>{\n+                return new Promise(resolve=>{\n+                    const stream = Fs.createWriteStream(filePath);\n+                    readStream.pipe(stream);\n+                    stream.on('close', function (err) {\n+                        resolve()\n+                    });\n+                })\n+            }\n+\n+            let filePath = \"/upload\"\n             await exitsFolder(filePath);\n-            const filePathName = Path.join(process.cwd(),`${filePath}/${name}`)\n-            await file.pipe(Fs.createWriteStream(filePathName));\n+            filePath = Path.join(process.cwd(),`${filePath}/${name}`);\n+            // await file.pipe(Fs.createWriteStream(filePathName)); //异步写入文件\n+            await asynWriteFile(file,filePath)\n             return h.response('success');\n             \n         }\n     });\n"
+                },
+                {
+                    "date": 1698374533796,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -220,10 +220,8 @@\n             }    \n         }\n     });\n \n-\n-\n     await server.start();\n     console.log('Server running on %s', server.info.uri);\n };\n \n"
+                },
+                {
+                    "date": 1698374569778,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,9 +19,11 @@\n     credentials:{\n         accessKeyId:\"AKIAQ5QAJCD2C3HB2TXB\",\n         secretAccessKey:\"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\"\n     }\n-})\n+});\n+const Run = 'Running.txt'\n+const serverStatus = ()=>{ Fs.unlinkSync(Run);}\n const init = async () => {\n \n     const server = Hapi.server({\n         port: 8888,\n@@ -38,8 +40,9 @@\n     server.route({\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n+            if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n             const context = {title: 'RVc'};\n             return h.view('index', context);\n         }\n     });\n"
+                },
+                {
+                    "date": 1698374602322,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,8 +41,10 @@\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n             if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n+\n+            \n             const context = {title: 'RVc'};\n             return h.view('index', context);\n         }\n     });\n"
+                },
+                {
+                    "date": 1698374611963,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n \n-            \n+            await Hoek.wait(1000);\n             const context = {title: 'RVc'};\n             return h.view('index', context);\n         }\n     });\n"
+                },
+                {
+                    "date": 1698374617532,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,8 +43,9 @@\n         handler: async (request, h)=> {\n             if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n \n             await Hoek.wait(1000);\n+            serverStatus();\n             const context = {title: 'RVc'};\n             return h.view('index', context);\n         }\n     });\n"
+                },
+                {
+                    "date": 1698374649559,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,9 +41,8 @@\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n             if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-\n             await Hoek.wait(1000);\n             serverStatus();\n             const context = {title: 'RVc'};\n             return h.view('index', context);\n"
+                },
+                {
+                    "date": 1698374737071,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -40,13 +40,17 @@\n     server.route({\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n-            if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-            await Hoek.wait(1000);\n-            serverStatus();\n-            const context = {title: 'RVc'};\n-            return h.view('index', context);\n+            try{\n+                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n+                await Hoek.wait(1000);\n+                serverStatus();\n+                const context = {title: 'RVc'};\n+                return h.view('index', context);\n+            }catch(err){\n+                throw Boom.badRequest(error)\n+            }\n         }\n     });\n \n     //node 执行shell并传递参数给python实例\n"
+                },
+                {
+                    "date": 1698374756904,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -46,9 +46,9 @@\n                 await Hoek.wait(1000);\n                 serverStatus();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n-            }catch(err){\n+            }catch(error){\n                 throw Boom.badRequest(error)\n             }\n         }\n     });\n"
+                },
+                {
+                    "date": 1698374806410,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,8 +43,9 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n                 await Hoek.wait(1000);\n+                Fs.writeFileSync(Run, 'Hello World');\n                 serverStatus();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n"
+                },
+                {
+                    "date": 1698374819294,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,12 +41,12 @@\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n-                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-                await Hoek.wait(1000);\n-                Fs.writeFileSync(Run, 'Hello World');\n-                serverStatus();\n+                // if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n+                // await Hoek.wait(1000);\n+                // Fs.writeFileSync(Run, 'Hello World');\n+                // serverStatus();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n                 throw Boom.badRequest(error)\n"
+                },
+                {
+                    "date": 1698374824882,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,12 +41,12 @@\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n-                // if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-                // await Hoek.wait(1000);\n-                // Fs.writeFileSync(Run, 'Hello World');\n-                // serverStatus();\n+                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n+                await Hoek.wait(1000);\n+                Fs.writeFileSync(Run, 'Hello World');\n+                serverStatus();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n                 throw Boom.badRequest(error)\n"
+                },
+                {
+                    "date": 1698374841043,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -44,9 +44,9 @@\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n                 await Hoek.wait(1000);\n                 Fs.writeFileSync(Run, 'Hello World');\n-                serverStatus();\n+                // serverStatus();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n                 throw Boom.badRequest(error)\n"
+                },
+                {
+                    "date": 1698374930915,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,11 +42,17 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-                await Hoek.wait(1000);\n+                \n                 Fs.writeFileSync(Run, 'Hello World');\n-                // serverStatus();\n+                \n+                const save = async ()=>{\n+                    await Hoek.wait(1000);\n+                    // serverStatus();\n+                }\n+\n+                save();\n                 const context = {title: 'RVc'};\n                 return h.view('index', context);\n             }catch(error){\n                 throw Boom.badRequest(error)\n"
+                },
+                {
+                    "date": 1698374945743,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,14 +42,13 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n-                \n                 Fs.writeFileSync(Run, 'Hello World');\n                 \n                 const save = async ()=>{\n-                    await Hoek.wait(1000);\n-                    // serverStatus();\n+                    await Hoek.wait(10000);\n+                    serverStatus();\n                 }\n \n                 save();\n                 const context = {title: 'RVc'};\n"
+                },
+                {
+                    "date": 1698374975306,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -46,8 +46,9 @@\n                 Fs.writeFileSync(Run, 'Hello World');\n                 \n                 const save = async ()=>{\n                     await Hoek.wait(10000);\n+                    console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n                 save();\n"
+                },
+                {
+                    "date": 1698375022145,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -45,9 +45,9 @@\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n                 Fs.writeFileSync(Run, 'Hello World');\n                 \n                 const save = async ()=>{\n-                    await Hoek.wait(10000);\n+                    await Hoek.wait(20000);\n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
+                },
+                {
+                    "date": 1698375059691,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -45,9 +45,9 @@\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n                 Fs.writeFileSync(Run, 'Hello World');\n                 \n                 const save = async ()=>{\n-                    await Hoek.wait(20000);\n+                    await Hoek.wait(1000 * 60 * 10);\n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
+                },
+                {
+                    "date": 1698375714034,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -41,9 +41,9 @@\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n-                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 5);}\n+                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 Fs.writeFileSync(Run, 'Hello World');\n                 \n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698375733867,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,8 +43,9 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 Fs.writeFileSync(Run, 'Hello World');\n+                console.log(request.query)\n                 \n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n                     console.log(\"执行成功！\")\n"
+                },
+                {
+                    "date": 1698375743183,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,9 +43,9 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 Fs.writeFileSync(Run, 'Hello World');\n-                console.log(request.query)\n+                console.log(request.query.id)\n                 \n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n                     console.log(\"执行成功！\")\n"
+                },
+                {
+                    "date": 1698375806900,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,9 +43,9 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 Fs.writeFileSync(Run, 'Hello World');\n-                console.log(request.query.id)\n+                console.log(request.query.id);\n                 \n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n                     console.log(\"执行成功！\")\n"
+                },
+                {
+                    "date": 1698375989326,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -44,9 +44,9 @@\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 Fs.writeFileSync(Run, 'Hello World');\n                 console.log(request.query.id);\n-                \n+                console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n                     console.log(\"执行成功！\")\n                     serverStatus();\n"
+                },
+                {
+                    "date": 1698376018326,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                Fs.writeFileSync(Run, 'Hello World');\n+                Fs.writeFileSync(Run, `Hello World ${i++}`);\n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376030040,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                Fs.writeFileSync(Run, `Hello World ${i++}`);\n+                Fs.writeFileSync(Run, `Hello World ${1++}`);\n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376039635,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                Fs.writeFileSync(Run, `Hello World ${1++}`);\n+                Fs.writeFileSync(Run, `Hello World ${1++}`); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376062226,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,8 +42,10 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n+                let i = 1;\n+                i++\n                 Fs.writeFileSync(Run, `Hello World ${1++}`); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n"
+                },
+                {
+                    "date": 1698376079847,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,11 +42,11 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = 1;\n+                let i = 0;\n                 i++\n-                Fs.writeFileSync(Run, `Hello World ${1++}`); \n+                Fs.writeFileSync(Run, `Hello World ${i}`); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376204709,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -44,9 +44,9 @@\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = 0;\n                 i++\n-                Fs.writeFileSync(Run, `Hello World ${i}`); \n+                Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376221298,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = 0;\n+                let i = Fs.readFileSync(Run, 'utf-8') || 0;\n                 i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n"
+                },
+                {
+                    "date": 1698376273600,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = Fs.readFileSync(Run, 'utf-8') || 0;\n+                let i = !Fs.existsSync(Run) ? 0 : Fs.readFileSync(Run, 'utf-8');\n                 i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n"
+                },
+                {
+                    "date": 1698376286617,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,8 +43,9 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Fs.readFileSync(Run, 'utf-8');\n+                console.log(i)\n                 i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n"
+                },
+                {
+                    "date": 1698376309161,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = !Fs.existsSync(Run) ? 0 : Fs.readFileSync(Run, 'utf-8');\n+                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run, 'utf-8'));\n                 console.log(i)\n                 i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n"
+                },
+                {
+                    "date": 1698376363529,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -42,9 +42,9 @@\n         path: '/',\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run, 'utf-8'));\n+                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n                 console.log(i)\n                 i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n"
+                },
+                {
+                    "date": 1698376376051,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,10 +43,11 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n+                \n+                i++\n                 console.log(i)\n-                i++\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n"
+                },
+                {
+                    "date": 1698376388368,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -43,9 +43,8 @@\n         handler: async (request, h)=> {\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n-                \n                 i++\n                 console.log(i)\n                 Fs.writeFileSync(Run, i); \n                 console.log(request.query.id);\n"
+                },
+                {
+                    "date": 1698376461930,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -45,9 +45,9 @@\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n                 i++\n                 console.log(i)\n-                Fs.writeFileSync(Run, i); \n+                Fs.writeFileSync(Run, \"12312\"); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698376474797,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -45,9 +45,9 @@\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n                 i++\n                 console.log(i)\n-                Fs.writeFileSync(Run, \"12312\"); \n+                Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10);\n"
+                },
+                {
+                    "date": 1698391462880,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -49,9 +49,9 @@\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n-                    await Hoek.wait(1000 * 60 * 10);\n+                    await Hoek.wait(1000 * 60 * 10); \n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
+                },
+                {
+                    "date": 1698391500528,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -44,9 +44,9 @@\n             try{\n                 if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n                 let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n                 i++\n-                console.log(i)\n+                console.log(i,'-=--')\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n"
+                },
+                {
+                    "date": 1698391544603,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -47,9 +47,8 @@\n                 i++\n                 console.log(i,'-=--')\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n-                console.log(Fs.readFileSync(Run, 'utf-8'))\n                 const save = async ()=>{\n                     await Hoek.wait(1000 * 60 * 10); \n                     console.log(\"执行成功！\")\n                     serverStatus();\n"
+                },
+                {
+                    "date": 1698391578236,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -48,9 +48,9 @@\n                 console.log(i,'-=--')\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 const save = async ()=>{\n-                    await Hoek.wait(1000 * 60 * 10); \n+                    await Hoek.wait(1000 * 60); \n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
+                },
+                {
+                    "date": 1698391743063,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -245,8 +245,8 @@\n };\n \n process.on('unhandledRejection', (err) => {\n     console.log(err);\n-    process.exit(1);\n+    // process.exit(1);\n });\n \n init();\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1698391797165,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -48,9 +48,9 @@\n                 console.log(i,'-=--')\n                 Fs.writeFileSync(Run, String(i)); \n                 console.log(request.query.id);\n                 const save = async ()=>{\n-                    await Hoek.wait(1000 * 60); \n+                    await Hoek.wait(1000 * 60 * 10); \n                     console.log(\"执行成功！\")\n                     serverStatus();\n                 }\n \n"
                 }
             ],
             "date": 1698116593430,
