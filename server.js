@@ -19,8 +19,8 @@ const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, Delet
 // const s3Client = new S3Client({
 //     region:"ap-east-1",
 //     credentials:{
-//         accessKeyId:"",
-//         secretAccessKey:""
+//         accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
+//         secretAccessKey:"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"
 //     }
 // })
 
@@ -156,7 +156,7 @@ const init = async () => {
                 //从bucket获取一张图片，并在60m后过期
                 const getObjectURL = async (Key)=>{
                     const command = new GetObjectCommand({
-                        Bucket:"shihuojian-private-test",
+                        Bucket:"wissai",
                         Key
                     });
                     return await getSignedUrl(s3Client,command,{ expiresIn: 60 });
@@ -201,12 +201,28 @@ const init = async () => {
                     });
                     return await s3Client.send(command)
                 }
-                const file = request.payload.file;
-                const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题,
-                return await uploadObject(name,file._data,file.hapi.headers["content-type"]);
+                // const file = request.payload.file;
+                // const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题,
+                // await uploadObject(name,file._data,file.hapi.headers["content-type"]);
                 // const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出
                 // const base64 = Buffer.from(url).toString('base64');
                 // return h.response(base64);
+
+                //上传压缩文件
+                // await exec(`zip -rj upload/test1.zip upload/test1`);  //压缩upload/test1
+                // const fileContent = Fs.readFileSync("upload/test1.zip");
+                // return await uploadObject("test1.zip",fileContent,'zip'); // 上传压缩文件夹
+
+                //下载一个zip文件并解压到指定文件夹
+                // const url = await getObjectURL("test1.zip");
+                // const filename = "./test1.zip";
+                // var stream = Request.get(url).pipe(Fs.createWriteStream(filename));
+                // stream.on('close', async function(res) {
+                //     console.log("Cached cover image for release");
+                //     await exec(`unzip -o test1.zip -d test1`); //解压并覆盖之前文件
+                // });
+                
+                return "success"
 
             } catch (error) {
                 throw Boom.badRequest(error)
