@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 47,
+            "activePatchIndex": 55,
             "patches": [
                 {
                     "date": 1698116593430,
@@ -196,6 +196,38 @@
                 {
                     "date": 1698393166532,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -19,11 +19,9 @@\n     credentials:{\n         accessKeyId:\"AKIAQ5QAJCD2C3HB2TXB\",\n         secretAccessKey:\"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\"\n     }\n-});\n-const Run = 'Running.txt'\n-const serverStatus = ()=>{ Fs.unlinkSync(Run);}\n+})\n const init = async () => {\n \n     const server = Hapi.server({\n         port: 8888,\n@@ -40,27 +38,10 @@\n     server.route({\n         method: 'GET',\n         path: '/',\n         handler: async (request, h)=> {\n-            try{\n-                if(Fs.existsSync(Run)){await Hoek.wait(1000 * 3);}\n-                let i = !Fs.existsSync(Run) ? 0 : Number(Fs.readFileSync(Run));\n-                i++\n-                console.log(i,'-=--')\n-                Fs.writeFileSync(Run, String(i)); \n-                console.log(request.query.id);\n-                const save = async ()=>{\n-                    await Hoek.wait(1000 * 60 * 10); \n-                    console.log(\"执行成功！\")\n-                    serverStatus();\n-                }\n-\n-                await save();\n-                const context = {title: 'RVc'};\n-                return h.view('index', context);\n-            }catch(error){\n-                throw Boom.badRequest(error)\n-            }\n+            const context = {title: 'RVc'};\n+            return h.view('index', context);\n         }\n     });\n \n     //node 执行shell并传递参数给python实例\n@@ -239,14 +220,16 @@\n             }    \n         }\n     });\n \n+\n+\n     await server.start();\n     console.log('Server running on %s', server.info.uri);\n };\n \n process.on('unhandledRejection', (err) => {\n     console.log(err);\n-    // process.exit(1);\n+    process.exit(1);\n });\n \n init();\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1698563566408,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -13,15 +13,26 @@\n const Path = require('node:path');\n const { getSignedUrl } = require(\"@aws-sdk/s3-request-presigner\");\n const Request = require('request');\n const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require(\"@aws-sdk/client-s3\");\n-const s3Client = new S3Client({\n-    region:\"ap-east-1\",\n-    credentials:{\n-        accessKeyId:\"AKIAQ5QAJCD2C3HB2TXB\",\n-        secretAccessKey:\"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\"\n+// const s3Client = new S3Client({\n+//     region:\"ap-east-1\",\n+//     credentials:{\n+//         accessKeyId:\"AKIAQ5QAJCD2C3HB2TXB\",\n+//         secretAccessKey:\"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\"\n+//     }\n+// })\n+\n+\n+const s3Client = new S3({\n+    forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n+    endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n+    region: \"us-east-1\",\n+    credentials: {\n+      accessKeyId: process.env.SPACES_KEY,\n+      secretAccessKey: process.env.SPACES_SECRET\n     }\n-})\n+});\n const init = async () => {\n \n     const server = Hapi.server({\n         port: 8888,\n"
+                },
+                {
+                    "date": 1698563582355,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -27,10 +27,10 @@\n     forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n     endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n     region: \"us-east-1\",\n     credentials: {\n-      accessKeyId: process.env.SPACES_KEY,\n-      secretAccessKey: process.env.SPACES_SECRET\n+      accessKeyId: \"process.env.SPACES_KEY\",\n+      secretAccessKey: \"process.env.SPACES_SECRET\"\n     }\n });\n const init = async () => {\n \n"
+                },
+                {
+                    "date": 1698563598746,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -27,10 +27,10 @@\n     forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n     endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n     region: \"us-east-1\",\n     credentials: {\n-      accessKeyId: \"process.env.SPACES_KEY\",\n-      secretAccessKey: \"process.env.SPACES_SECRET\"\n+      accessKeyId: \"DO00HQDQVU39X2M7GWCE\",\n+      secretAccessKey: \"VK6moOWYERQxPzyB+lckraxB/nRVur0qeiJ/xtQOjqw\"\n     }\n });\n const init = async () => {\n \n"
+                },
+                {
+                    "date": 1698563631392,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,8 +12,10 @@\n const Fs = require('node:fs');\n const Path = require('node:path');\n const { getSignedUrl } = require(\"@aws-sdk/s3-request-presigner\");\n const Request = require('request');\n+\n+//aws S3配置\n const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require(\"@aws-sdk/client-s3\");\n // const s3Client = new S3Client({\n //     region:\"ap-east-1\",\n //     credentials:{\n@@ -21,9 +23,9 @@\n //         secretAccessKey:\"NJJKBgEiP4wG2gnO7MqH6+HrNhZZysPOBnH7TLkS\"\n //     }\n // })\n \n-\n+//digitalocean配置，参考https://docs.digitalocean.com/products/spaces/reference/s3-sdk-examples/\n const s3Client = new S3({\n     forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n     endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n     region: \"us-east-1\",\n"
+                },
+                {
+                    "date": 1698563691814,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -24,9 +24,9 @@\n //     }\n // })\n \n //digitalocean配置，参考https://docs.digitalocean.com/products/spaces/reference/s3-sdk-examples/\n-const s3Client = new S3({\n+const s3Client = new S3Client({\n     forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n     endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n     region: \"us-east-1\",\n     credentials: {\n"
+                },
+                {
+                    "date": 1698563772287,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -202,12 +202,12 @@\n                     return await s3Client.send(command)\n                 }\n                 const file = request.payload.file;\n                 const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题,\n-                await uploadObject(name,file._data,file.hapi.headers[\"content-type\"]);\n-                const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出\n-                const base64 = Buffer.from(url).toString('base64');\n-                return h.response(base64);\n+                return await uploadObject(name,file._data,file.hapi.headers[\"content-type\"]);\n+                // const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出\n+                // const base64 = Buffer.from(url).toString('base64');\n+                // return h.response(base64);\n \n             } catch (error) {\n                 throw Boom.badRequest(error)\n             }    \n"
+                },
+                {
+                    "date": 1698563831356,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -196,9 +196,9 @@\n \n                 //上传文件\n                 const uploadObject = async(Key,Body,ContentType)=>{\n                     const command = new PutObjectCommand({\n-                        Bucket:\"shihuojian-private-test\",Key,Body,ContentType\n+                        Bucket:\"wissai\",Key,Body,ContentType\n                     });\n                     return await s3Client.send(command)\n                 }\n                 const file = request.payload.file;\n"
+                },
+                {
+                    "date": 1698563877759,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -26,9 +26,9 @@\n \n //digitalocean配置，参考https://docs.digitalocean.com/products/spaces/reference/s3-sdk-examples/\n const s3Client = new S3Client({\n     forcePathStyle: false, // Configures to use subdomain/virtual calling format.\n-    endpoint: \"https://wissai.nyc3.digitaloceanspaces.com\",\n+    endpoint: \"https://nyc3.digitaloceanspaces.com\",\n     region: \"us-east-1\",\n     credentials: {\n       accessKeyId: \"DO00HQDQVU39X2M7GWCE\",\n       secretAccessKey: \"VK6moOWYERQxPzyB+lckraxB/nRVur0qeiJ/xtQOjqw\"\n"
                 }
             ],
             "date": 1698116593430,

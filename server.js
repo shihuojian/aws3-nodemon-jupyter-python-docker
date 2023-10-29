@@ -13,14 +13,27 @@ const Fs = require('node:fs');
 const Path = require('node:path');
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const Request = require('request');
+
+//aws S3配置
 const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+// const s3Client = new S3Client({
+//     region:"ap-east-1",
+//     credentials:{
+//         accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
+//         secretAccessKey:"NJJKBgEiP4wG2gnO7MqH6+HrNhZZysPOBnH7TLkS"
+//     }
+// })
+
+//digitalocean配置，参考https://docs.digitalocean.com/products/spaces/reference/s3-sdk-examples/
 const s3Client = new S3Client({
-    region:"ap-east-1",
-    credentials:{
-        accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
-        secretAccessKey:"NJJKBgEiP4wG2gnO7MqH6+HrNhZZysPOBnH7TLkS"
+    forcePathStyle: false, // Configures to use subdomain/virtual calling format.
+    endpoint: "https://nyc3.digitaloceanspaces.com",
+    region: "us-east-1",
+    credentials: {
+      accessKeyId: "DO00HQDQVU39X2M7GWCE",
+      secretAccessKey: "VK6moOWYERQxPzyB+lckraxB/nRVur0qeiJ/xtQOjqw"
     }
-})
+});
 const init = async () => {
 
     const server = Hapi.server({
@@ -184,16 +197,16 @@ const init = async () => {
                 //上传文件
                 const uploadObject = async(Key,Body,ContentType)=>{
                     const command = new PutObjectCommand({
-                        Bucket:"shihuojian-private-test",Key,Body,ContentType
+                        Bucket:"wissai",Key,Body,ContentType
                     });
                     return await s3Client.send(command)
                 }
                 const file = request.payload.file;
                 const name = `${Date.now()}-${Path.basename(file.hapi.filename)}`;  //如果是模型的话需要固定名称，不然训练有问题,
-                await uploadObject(name,file._data,file.hapi.headers["content-type"]);
-                const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出
-                const base64 = Buffer.from(url).toString('base64');
-                return h.response(base64);
+                return await uploadObject(name,file._data,file.hapi.headers["content-type"]);
+                // const url = await getObjectURL(name);   //获取到的图片无法访问，需要apn，解决办法可以在服务器获取数据流输出
+                // const base64 = Buffer.from(url).toString('base64');
+                // return h.response(base64);
 
             } catch (error) {
                 throw Boom.badRequest(error)
