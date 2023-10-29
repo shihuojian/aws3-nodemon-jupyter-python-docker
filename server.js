@@ -19,8 +19,8 @@ const { S3Client, GetObjectCommand,PutObjectCommand, ListObjectsV2Command, Delet
 // const s3Client = new S3Client({
 //     region:"ap-east-1",
 //     credentials:{
-//         accessKeyId:"AKIAQ5QAJCD2C3HB2TXB",
-//         secretAccessKey:"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"
+//         accessKeyId:"",
+//         secretAccessKey:""
 //     }
 // })
 
@@ -30,8 +30,8 @@ const s3Client = new S3Client({
     endpoint: "https://nyc3.digitaloceanspaces.com",
     region: "us-east-1",
     credentials: {
-      accessKeyId: "DO00HQDQVU39X2M7GWCE",
-      secretAccessKey: "VK6moOWYERQxPzyB+lckraxB/nRVur0qeiJ/xtQOjqw"
+      accessKeyId: "",
+      secretAccessKey: ""
     }
 });
 const init = async () => {
